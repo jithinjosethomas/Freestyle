@@ -1,9 +1,9 @@
 #include "freestyle.h"
 #include <time.h>
 
-#define MSG_LEN (1024)
+#define MSG_LEN (1111)
 
-int main (int argc, char **argv)
+int main ()
 {
 	int i;
 
@@ -26,12 +26,11 @@ int main (int argc, char **argv)
 	u8 plaintext [MSG_LEN];
 	u8 ciphertext[MSG_LEN];
 
-	u16 expected_hash [MSG_LEN/64 + 1];
+	u8 expected_hash [MSG_LEN/64 + 1];
 
-	u32 min_rounds 	= 8;
-	u32 max_rounds 	= 32;
-
-	u32 hash_interval   = 1;
+	u8 min_rounds 	= 8;
+	u8 max_rounds 	= 32;
+	u8  num_precomputed_rounds = 4;
 
 	u8 pepper_bits = 16;
 	u8 num_init_hashes = 28;
@@ -55,7 +54,7 @@ int main (int argc, char **argv)
 			iv,
 			min_rounds,
 			max_rounds,
-			hash_interval,
+			num_precomputed_rounds,
 			pepper_bits,
 			num_init_hashes	
 	);
@@ -69,7 +68,7 @@ int main (int argc, char **argv)
 			iv,
 			min_rounds,
 			max_rounds,
-			hash_interval,
+			num_precomputed_rounds,
 			pepper_bits,
 			num_init_hashes,
 			encrypt.init_hash	
@@ -96,7 +95,7 @@ int main (int argc, char **argv)
 			iv,
 			min_rounds,
 			max_rounds,
-			hash_interval,
+			num_precomputed_rounds,
 			pepper_bits,
 			num_init_hashes,
 			encrypt.pepper,
@@ -120,7 +119,7 @@ int main (int argc, char **argv)
 			iv,
 			min_rounds,
 			max_rounds,
-			hash_interval,
+			num_precomputed_rounds,
 			pepper_bits,
 			num_init_hashes,
 			encrypt.init_hash	

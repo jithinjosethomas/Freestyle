@@ -129,7 +129,7 @@ static u8 freestyle_encrypt_block (
 
 	u32 	temp1, temp2;
 
-	u8 	r;
+	u8	r;
 	u8 	rounds;
 
 	u32 hash_collided [8];
@@ -629,7 +629,6 @@ void freestyle_encrypt (
 
 	u8	hash;
 
-	u16 	r;
 	u16 	rounds;
 
 	u32 	temp1, temp2;
@@ -676,25 +675,35 @@ void freestyle_encrypt (
 		assert (rounds >= x->min_rounds);
 		assert (rounds <= x->max_rounds);
 
-		for (r = x->num_precomputed_rounds + 1; r <= rounds; ++r)
-		{
-			if (r & 1)
-			{
-				FREESTYLE_COLUMN_ROUND()
-			}
-			else
-			{
-				FREESTYLE_DIAGONAL_ROUND()
-			}
+		// For rounds = num_precomputed_rounds(4) + 1 TO min_rounds (8)
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		COMPUTE_HASH(x,hash,8)
+		if (8 == rounds) goto done;
 
-			if (r >= x->min_rounds && r % x->hash_interval == 0)
-			{
-				COMPUTE_HASH(x,hash,r)
-			}
-		}
+		// For rounds = min_rounds(8) + 1 TO rounds (max value = 32)
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		COMPUTE_HASH(x,hash,16)
+		if (16 == rounds) goto done;
 
-		assert (r <= x->max_rounds + 1);
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		COMPUTE_HASH(x,hash,24)
+		if (24 == rounds) goto done;
 
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		COMPUTE_HASH(x,hash,32)
+		if (32 == rounds) goto done;
+
+done:
 	    	expected_hash[block] = hash;
 
 		output_00 = PLUS(output_00, x->input_CONSTANT0);
@@ -771,8 +780,6 @@ void freestyle_decrypt (
 
 	u8	hash;
 
-	u16 	r;
-
 	u32 	temp1, temp2;
 
 	u8	keystream[64];
@@ -811,27 +818,35 @@ void freestyle_decrypt (
 		output_14 = x->input_IV1;
 		output_15 = x->input_IV2;
 
-		for(r = x->num_precomputed_rounds + 1; r <= x->max_rounds; ++r)
-		{
-			if (r & 1)
-			{
-				FREESTYLE_COLUMN_ROUND()
-			}
-			else
-			{
-				FREESTYLE_DIAGONAL_ROUND()
-			}
+		// For rounds = num_precomputed_rounds(4) + 1 TO min_rounds (8)
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		COMPUTE_HASH(x,hash,8)
+		if (hash == expected_hash[block]) goto done;
 
-			if (r >= x->min_rounds && r % x->hash_interval == 0)
-			{
-				COMPUTE_HASH(x,hash,r)
+		// For rounds = min_rounds(8) + 1 TO rounds (max value = 32)
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		COMPUTE_HASH(x,hash,16)
+		if (hash == expected_hash[block]) goto done;
 
-				if (hash == expected_hash[block]) {
-					break;
-				}
-			}
-		}
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		COMPUTE_HASH(x,hash,24)
+		if (hash == expected_hash[block]) goto done;
 
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		FREESTYLE_DOUBLE_ROUND()
+		COMPUTE_HASH(x,hash,32)
+		if (hash == expected_hash[block]) goto done;
+
+done:
 		output_00 = PLUS(output_00, x->input_CONSTANT0);
 		output_01 = PLUS(output_01, x->input_CONSTANT1);
 		output_02 = PLUS(output_02, x->input_CONSTANT2);
@@ -879,7 +894,7 @@ void freestyle_decrypt (
 				plaintext [i] = ciphertext[i] ^ keystream[i];
 			}
 
-			return ;
+			return;
 		}
 
 		plaintext  += 64;
